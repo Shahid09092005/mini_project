@@ -66,34 +66,17 @@ print('Getting and resizing train images and masks ... ')
 sys.stdout.flush()
 # stdout. flush() forces it to “flush” the buffer, meaning that it will write everything in the buffer to the terminal
 for n, id_ in tqdm(enumerate(train_ids), total=len(train_ids)):
-  # tqdm for progressive animation
-    path = TRAIN_PATH + id_
-    img = imread(path + '/images/' + id_ + '.png')[:,:,:IMG_CHANNELS] # Read the images with 3 channels(Usually imread reads images with 4 channels)
-    img = resize(img, (IMG_HEIGHT, IMG_WIDTH), mode='constant', preserve_range=True) # DownSample the images keeping the orginal aspect ration
-    X_train[n] = img # Appending the images to the X_train array
-
-    # Now we will stich the mask images and make it similar size to the training images
-    # mask = np.zeros((IMG_HEIGHT, IMG_WIDTH, 1), dtype=np.bool)
-    mask = np.zeros((IMG_HEIGHT, IMG_WIDTH, 1), dtype=bool)
-
-    for mask_file in os.listdir(path + '/masks/'):
-        mask_ = imread(path + '/masks/' + mask_file) # Read mask as shape of (256, 256)
-        mask_ = np.expand_dims(resize(mask_, (IMG_HEIGHT, IMG_WIDTH), mode='constant',
-                                      preserve_range=True), axis=-1) # convert the image to shape of (128,128,1)
-        mask = np.maximum(mask, mask_) # takes max values as mask(white nucleus exclue background)
-    Y_train[n] = mask # Merge all mask and put it on Y_train
-
-# Get and resize test images
-X_test = np.zeros((len(test_ids), IMG_HEIGHT, IMG_WIDTH, IMG_CHANNELS), dtype=np.uint8)
-sizes_test = [] # To upsample during making predicting
-print('Getting and resizing test images ... ')
-sys.stdout.flush()
-for n, id_ in tqdm(enumerate(test_ids), total=len(test_ids)):
-    path = TEST_PATH + id_
-    img = imread(path + '/images/' + id_ + '.png')[:,:,:IMG_CHANNELS]
-    sizes_test.append([img.shape[0], img.shape[1]])
+    path = os.path.join(TRAIN_PATH, id_)
+    img = imread(os.path.join(path, 'images', id_ + '.png'))[:,:,:IMG_CHANNELS]
     img = resize(img, (IMG_HEIGHT, IMG_WIDTH), mode='constant', preserve_range=True)
-    X_test[n] = img
+    X_train[n] = img
+
+    mask = np.zeros((IMG_HEIGHT, IMG_WIDTH, 1), dtype=bool)
+    for mask_file in os.listdir(os.path.join(path, 'masks')):
+        mask_ = imread(os.path.join(path, 'masks', mask_file))
+        mask_ = np.expand_dims(resize(mask_, (IMG_HEIGHT, IMG_WIDTH), mode='constant', preserve_range=True), axis=-1)
+        mask = np.maximum(mask, mask_)
+    Y_train[n] = mask
 
 ix = random.randint(0, len(train_ids))
 print("Training image")
